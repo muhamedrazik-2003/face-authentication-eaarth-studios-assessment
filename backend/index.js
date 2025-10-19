@@ -4,25 +4,28 @@ const cors = require("cors");
 const cookiesParser = require("cookie-parser");
 const dbConnect = require("./config/dbConnection");
 const { loadModels } = require("./config/faceapiConfig");
+const authRouter = require('./routes/authRoutes');
 
 dbConnect();
 
 const server = express();
 
 server.use(cookiesParser());
-app.use(helmet());
-app.use(
+server.use(helmet());
+server.use(
   cors({
     origin: process.env.FRONTEND_URL || "http://localhost:3000",
     credentials: true,
   })
 );
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+server.use(express.json({ limit: "10mb" }));
+server.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
 (async () => {
   await loadModels();
 })();
+
+server.use('/api', authRouter);
 
 server.use((req, res, next) => {
   const error = new Error(`Route ${req.method} ${req.path} not found`);

@@ -1,0 +1,1 @@
+Assessment project for Eaarth Studios — a secure face authentication system built using MERN stack and face recognition APIs.

@@ -1,7 +1,9 @@
-const faceapi = require("face-api.js");
+const faceapi = require("@vladmandic/face-api");
 const tf = require("@tensorflow/tfjs-node");
 const canvas = require("canvas");
 const path = require("path");
+
+faceapi.tf = tf;
 
 const { Canvas, Image, ImageData } = canvas;
 faceapi.env.monkeyPatch({ Canvas, Image, ImageData });
@@ -12,11 +14,10 @@ const loadModels = async () => {
   await faceapi.nets.ssdMobilenetv1.loadFromDisk(MODEL_PATH);
   await faceapi.nets.faceLandmark68Net.loadFromDisk(MODEL_PATH);
   await faceapi.nets.faceRecognitionNet.loadFromDisk(MODEL_PATH);
-  console.log("Face-api models loaded successfully");
 };
 
 const getFaceDescriptor = async (imageBuffer) => {
-  const tensor = tf.node.decodeImage(imageBuffer);
+  const tensor = tf.node.decodeImage(imageBuffer, 3);
   const result = await faceapi
     .detectSingleFace(tensor)
     .withFaceLandmarks()

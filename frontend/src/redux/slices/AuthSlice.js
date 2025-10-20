@@ -1,5 +1,7 @@
 import { createSlice } from "@reduxjs/toolkit";
 
+const baseUrl = "http://localhost:8000/api"
+
 const authSlice = createSlice({
     name: 'authSlice',
     initialState: {

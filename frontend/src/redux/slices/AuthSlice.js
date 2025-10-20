@@ -92,15 +92,20 @@ const authSlice = createSlice({
 
     builder
       // Register user
-      .addCase(registerUser.pending, setPending)
+      .addCase(registerUser.pending, (state) => {
+        setPending(state);
+        state.isAuthenticated = false;
+      })
       .addCase(registerUser.fulfilled, (state) => {
         state.isLoading = false;
         state.isUserVerified = true;
+        state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(registerUser.rejected, (state, action) =>
-        setRejected(state, action, "Failed to register user")
-      )
+      .addCase(registerUser.rejected, (state, action) => {
+        setRejected(state, action, "Failed to register user");
+        state.isAuthenticated = false;
+      })
 
       // Verify user
       .addCase(verifyUser.pending, setPending)
@@ -115,17 +120,24 @@ const authSlice = createSlice({
       )
 
       // Login using face auth
-      .addCase(loginUsingFaceAuth.pending, setPending)
+
+      .addCase(loginUsingFaceAuth.pending, (state) => {
+        setPending(state);
+        state.isAuthenticated = false;
+      })
+
       .addCase(loginUsingFaceAuth.fulfilled, (state, action) => {
         state.user = action.payload.user;
         state.user.photoId = "";
         state.user.selfie = "";
         state.isLoading = false;
+        state.isAuthenticated = true;
         state.error = null;
       })
-      .addCase(loginUsingFaceAuth.rejected, (state, action) =>
-        setRejected(state, action, "Failed to verify user")
-      )
+      .addCase(loginUsingFaceAuth.rejected, (state, action) => {
+        setRejected(state, action, "Failed to verify user");
+        state.isAuthenticated = false;
+      })
 
       //   Change user account status
       .addCase(changeAccountStatus.pending, setPending)

@@ -6,7 +6,7 @@ const { getFaceDescriptor, faceapi } = require("../config/faceapiConfig");
 const isProduction = process.env.NODE_ENV === "production";
 
 // Helper
-const sendError = (res, code, message) => res.status(code).json({ success: false, message });
+const sendError = (res, code, message) => res.status(code).json({ message });
 
 // Register User
 exports.registerUser = async (req, res) => {
@@ -43,12 +43,11 @@ exports.registerUser = async (req, res) => {
     });
 
     res.status(201).json({
-      success: true,
       message: "User registration successful. Please wait for verification.",
     });
   } catch (err) {
     console.error("Register Error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -56,6 +55,7 @@ exports.registerUser = async (req, res) => {
 exports.VerfiyExistingUser = async (req, res) => {
   try {
     const { email, password } = req.body;
+    console.log("req body recieved", req.body)
     if (!email || !password)
       return sendError(res, 400, "Email and password required");
 
@@ -70,10 +70,10 @@ exports.VerfiyExistingUser = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return sendError(res, 400, "Invalid password");
 
-    res.json({ success: true, message: "User verified", userEmail: user.email });
+    res.json({ message: "User verified", userEmail: user.email });
   } catch (err) {
     console.error("Verify Error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -99,7 +99,7 @@ exports.loginWithFaceAuthentication = async (req, res) => {
     const token = jwt.sign(
       { userId: user._id, role: user.role },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1h" } // correct format
+      { expiresIn: "1h" }
     );
 
     res.cookie("accessToken", token, {
@@ -110,7 +110,6 @@ exports.loginWithFaceAuthentication = async (req, res) => {
     });
 
     res.json({
-      success: true,
       message: "Login successful",
       user: {
         email: user.email,
@@ -121,7 +120,7 @@ exports.loginWithFaceAuthentication = async (req, res) => {
     });
   } catch (err) {
     console.error("Face Auth Error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };
 
@@ -141,7 +140,6 @@ exports.changeAccountStatus = async (req, res) => {
     if (!updatedUser) return sendError(res, 404, "User not found");
 
     res.json({
-      success: true,
       message: "Status updated",
       user: {
         email: updatedUser.email,
@@ -152,6 +150,6 @@ exports.changeAccountStatus = async (req, res) => {
     });
   } catch (err) {
     console.error("Status Update Error:", err);
-    res.status(500).json({ success: false, message: err.message });
+    res.status(500).json({ message: err.message });
   }
 };

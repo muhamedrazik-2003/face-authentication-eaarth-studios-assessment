@@ -7,6 +7,7 @@ import NotFound from './pages/common/NotFound'
 import Unauthorized from './pages/common/Unauthorized'
 import { useSelector } from 'react-redux'
 import FaceAuth from './pages/common/FaceAuth'
+import { ToastContainer } from 'react-toastify'
 
 function App() {
   const { isAuthenticated, user, isLoading } = useSelector(
@@ -25,9 +26,8 @@ function App() {
     return children
   }
 
-  if(isLoading) return 
-
   return (
+    <>
     <Routes>
       <Route path='/auth' element={<Auth />} />
       <Route path='/auth/verify-face' element={<FaceAuth />} />
@@ -39,6 +39,18 @@ function App() {
 
       <Route path='/' element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
     </Routes>
+
+    <ToastContainer
+        position="top-right"
+        autoClose={3000}
+        hideProgressBar={true}
+        newestOnTop={true}
+        closeOnClick
+        pauseOnHover
+        draggable
+        theme="colored"
+      />
+    </>
   )
 }
 

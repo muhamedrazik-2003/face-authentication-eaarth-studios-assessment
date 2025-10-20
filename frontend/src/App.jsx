@@ -35,7 +35,7 @@ function App() {
       <Route path='*' element={<NotFound />} />
       <Route path='/unauthorized' element={<Unauthorized />} />
 
-      <Route path='/admin/dashboard' element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
+      <Route path='/admin' element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
 
       <Route path='/' element={<PrivateRoute><UserDashboard /></PrivateRoute>} />
     </Routes>

@@ -4,6 +4,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useNavigate } from 'react-router-dom';
 import WebcamPreview from '../../components/WebcamPreview';
 import OptionCard from '../../components/OptionCard';
+import { loginUsingFaceAuth, registerUser } from '../../redux/slices/AuthSlice';
+import { email } from 'zod';
+import { toast } from 'react-toastify';
+import { id } from 'zod/locales';
 
 function FaceAuth() {
   const navigate = useNavigate();
@@ -31,7 +35,7 @@ function FaceAuth() {
     };
   }, []);
 
-  const { isLoading, user, error, isRegistering, isUserVerified } = useSelector((state) => state.authSlice)
+  const { isLoading, user, isRegistering } = useSelector((state) => state.authSlice)
 
   const handlePhotoIdAdd = (e) => {
     const addedFile = e.target.files[0]
@@ -65,6 +69,57 @@ function FaceAuth() {
     }
   }
 
+  const handleSubmit = async () => {
+    const { fullName, email, password } = user
+    const { photoId, selfie } = selectedImages
+    console.log(selectedImages)
+    if (isRegistering) {
+      if (
+        !fullName ||
+        !email ||
+        !password
+      ) return toast.error("All input Fields are Required")
+
+      if (!photoId || !selfie) return toast.error(`${isRegistering ? "Both images are required" : "Image is Required"}`)
+    } else {
+      if (!selfie) return toast.error("Image is Required")
+
+    }
+
+
+    const userData = new FormData()
+
+    userData.append("fullName", fullName);
+    userData.append("email", email);
+    userData.append("password", password);
+    userData.append("idImage", photoId);
+    userData.append("selfie", selfie);
+
+    if (isRegistering) {
+      const response = await dispatch(registerUser(userData))
+      if (registerUser.fulfilled.match(response)) {
+        toast.success("Your Account Has been Registered Successfully")
+        navigate('/')
+        return
+      } else if (registerUser.rejected.match(response)) {
+        toast.error(response.payload.message)
+      }
+    } else {
+      const response = await dispatch(loginUsingFaceAuth(userData))
+      if (loginUsingFaceAuth.fulfilled.match(response)) {
+        toast.success("Logged in Successfully")
+        if (response.payload.user.role === "admin") {
+          navigate('/admin')
+        } else {
+          navigate('/')
+        }
+        return
+      } else if (loginUsingFaceAuth.rejected.match(response)) {
+        toast.error(response.payload.message)
+      }
+    }
+  }
+
   return (
     <main className="flex flex-col items-center justify-center min-h-screen w-full bg-gray-50 px-6 py-6 gap-6">
       <div>
@@ -80,7 +135,7 @@ function FaceAuth() {
 
       </div>
 
-      <div className={`grid items-center gap-12 w-full ${isRegistering ? "md:grid-cols-[1fr_auto_1fr] max-w-5xl" : "max-w-xl"}`}>
+      <div className={`grid items-center md:gap-12 w-full ${isRegistering ? "md:grid-cols-[1fr_auto_1fr] max-w-5xl" : "max-w-xl"}`}>
 
         {isRegistering &&
           <>
@@ -115,7 +170,7 @@ function FaceAuth() {
           {optionSelected && isSelfieOption ? (
             <div className="space-y-3">
               <p className="text-gray-600 font-medium">Take Selfie</p>
-              <WebcamPreview onCapture={(file) => setSelectedImages({ selfie: file })} />
+              <WebcamPreview onCapture={(file) => setSelectedImages(prev => ({ ...prev, selfie: file }))} />
             </div>
 
           ) : optionSelected && !isSelfieOption ? (
@@ -164,7 +219,7 @@ function FaceAuth() {
       </div>
 
       <button
-        // onClick={handleVerifyUser}
+        onClick={handleSubmit}
         className={`px-6 py-2 border rounded-3xl text-white flex gap-2 items-center justify-center ${isLoading
           ? "bg-indigo-500 cursor-not-allowed opacity-70"
           : "bg-indigo-800 hover:bg-indigo-700"

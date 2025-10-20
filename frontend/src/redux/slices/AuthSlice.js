@@ -73,7 +73,6 @@ const authSlice = createSlice({
     updateUser: (state, action) => {
       const { field, value } = action.payload;
       state.user[field] = value;
-      console.log(JSON.parse(JSON.stringify(state.user)));
     },
     clearError: (state) => {
       state.error = null;

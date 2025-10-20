@@ -15,11 +15,16 @@ function Auth() {
     dispatch(clearError());
     setValidationErrors({});
 
-    const userData = {
-      fullName: user.fullName || "",
-      email: user.email,
-      password: user.password
-    }
+    const userData = isRegistering
+      ? {
+        fullName: user.fullName,
+        email: user.email,
+        password: user.password,
+      }
+      : {
+        email: user.email,
+        password: user.password,
+      };
 
     try {
       if (isRegistering) {

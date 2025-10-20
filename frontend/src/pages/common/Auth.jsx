@@ -2,14 +2,14 @@ import { LucideLoader } from 'lucide-react'
 import React, { useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
-import { clearError, updateUser, verifyUser } from '../../redux/slices/AuthSlice';
+import { clearError, setIsRegistering, updateUser, verifyUser } from '../../redux/slices/AuthSlice';
 import { registerSchema, loginSchema } from '../../utils/utils'
 function Auth() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const [isRegistering, setIsRegistering] = useState(false)
+
   const [validationErrors, setValidationErrors] = useState({})
-  const { isLoading, user, error } = useSelector((state) => state.authSlice)
+  const { isLoading, user, error, isRegistering } = useSelector((state) => state.authSlice)
 
   const handleVerifyUser = async () => {
     dispatch(clearError());
@@ -113,9 +113,9 @@ function Auth() {
       </div>
 
       {isRegistering ? (
-        <p>Don't have an account? <span className='text-indigo-800 cursor-pointer' onClick={() => setIsRegistering(false)}>Sign In</span></p>
+        <p>Don't have an account? <span className='text-indigo-800 cursor-pointer' onClick={() => dispatch(setIsRegistering(false))}>Sign In</span></p>
       ) : (
-        <p>Already have an account? <span className='text-indigo-800 cursor-pointer' onClick={() => setIsRegistering(true)}>Sign Up</span></p>
+        <p>Already have an account? <span className='text-indigo-800 cursor-pointer' onClick={() => dispatch(setIsRegistering(true))}>Sign Up</span></p>
       )}
     </main>
   )

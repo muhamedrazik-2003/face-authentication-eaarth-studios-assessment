@@ -61,11 +61,10 @@ const authSlice = createSlice({
       email: "",
       password: "",
       status: "",
-      photoId: "",
-      selfie: "",
     },
     isLoading: false,
     error: null,
+    isRegistering: false,
     showFaceAuthentication: false,
     isAuthenticated: false,
     isUserVerified: false,
@@ -74,9 +73,13 @@ const authSlice = createSlice({
     updateUser: (state, action) => {
       const { field, value } = action.payload;
       state.user[field] = value;
+      console.log(JSON.parse(JSON.stringify(state.user)));
     },
     clearError: (state) => {
       state.error = null;
+    },
+    setIsRegistering: (state, action) => {
+      state.isRegistering = action.payload;
     },
   },
   extraReducers: (builder) => {
@@ -158,5 +161,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { updateUser, clearError } = authSlice.actions;
+export const { updateUser, clearError, setIsRegistering } = authSlice.actions;
 export default authSlice.reducer;

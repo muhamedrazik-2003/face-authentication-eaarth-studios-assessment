@@ -1,26 +1,150 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { axiosConfig } from "../../utils/utils";
 
-const baseUrl = "http://localhost:8000/api"
+const handleError = (error, defaultMessage) => ({
+  message: error.response?.data?.message || defaultMessage,
+});
+
+export const registerUser = createAsyncThunk(
+  "auth/registerUser",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosConfig.post(`/register`, userData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleError(error, "Face Authentication failed"));
+    }
+  }
+);
+
+export const verifyUser = createAsyncThunk(
+  "auth/verifyUser",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosConfig.post(`/verify-user`, userData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleError(error, "Failed to verify user"));
+    }
+  }
+);
+
+export const loginUsingFaceAuth = createAsyncThunk(
+  "auth/loginUsingFaceAuth",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosConfig.post(`/login-face-auth`, userData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleError(error, "Face Authentication failed"));
+    }
+  }
+);
+
+export const changeAccountStatus = createAsyncThunk(
+  "auth/changeAccountStatus",
+  async (userData, { rejectWithValue }) => {
+    try {
+      const { data } = await axiosConfig.patch(`/user/status`, userData);
+      return data;
+    } catch (error) {
+      return rejectWithValue(handleError(error, "Failed to change status"));
+    }
+  }
+);
 
 const authSlice = createSlice({
-    name: 'authSlice',
-    initialState: {
-        user: {
-            fullName:'',
-            email:'',
-            password:'',
-            photoId:'',
-            selfie:''
-        },
-        isLoading:false,
-        error: null,
-        showFaceAuthentication:false,
-        isAuthenticated:false,
+  name: "auth",
+  initialState: {
+    user: {
+      fullName: "",
+      email: "",
+      password: "",
+      status: "",
+      photoId: "",
+      selfie: "",
     },
-    reducers:{},
-    extraReducers: (builder) => {
+    isLoading: false,
+    error: null,
+    showFaceAuthentication: false,
+    isAuthenticated: false,
+    isUserVerified: false,
+  },
+  reducers: {
+    updateUser: (state, action) => {
+      const { field, value } = action.payload;
+      state.user[field] = value;
+    },
+    clearError: (state) => {
+      state.error = null;
+    },
+  },
+  extraReducers: (builder) => {
+    const setPending = (state) => {
+      state.isLoading = true;
+      state.error = null;
+    };
 
-    }
-})
+    const setRejected = (state, action, defaultMessage) => {
+      state.isLoading = false;
+      state.error = action.payload?.message || defaultMessage;
+    };
 
+    builder
+      // Register user
+      .addCase(registerUser.pending, setPending)
+      .addCase(registerUser.fulfilled, (state) => {
+        state.isLoading = false;
+        state.isUserVerified = true;
+        state.error = null;
+      })
+      .addCase(registerUser.rejected, (state, action) =>
+        setRejected(state, action, "Failed to register user")
+      )
+
+      // Verify user
+      .addCase(verifyUser.pending, setPending)
+      .addCase(verifyUser.fulfilled, (state, action) => {
+        state.user.email = action.payload.userEmail;
+        state.isLoading = false;
+        state.isUserVerified = true;
+        state.error = null;
+      })
+      .addCase(verifyUser.rejected, (state, action) =>
+        setRejected(state, action, "Failed to verify user")
+      )
+
+      // Login using face auth
+      .addCase(loginUsingFaceAuth.pending, setPending)
+      .addCase(loginUsingFaceAuth.fulfilled, (state, action) => {
+        state.user = action.payload.user;
+        state.user.photoId = "";
+        state.user.selfie = "";
+        state.isLoading = false;
+        state.error = null;
+      })
+      .addCase(loginUsingFaceAuth.rejected, (state, action) =>
+        setRejected(state, action, "Failed to verify user")
+      )
+
+      //   Change user account status
+      .addCase(changeAccountStatus.pending, setPending)
+      .addCase(changeAccountStatus.fulfilled, (state, action) => {
+        state.isLoading = false;
+        state.error = null;
+
+        if (action.payload?.user) {
+          state.user.status = action.payload.user.status;
+        }
+
+        state.message =
+          action.payload?.message || "Status updated successfully";
+      })
+      .addCase(changeAccountStatus.rejected, (state, action) =>
+        setRejected(state, action, "Failed to change account status")
+      );
+  },
+});
+
+export const { updateUser, clearError } = authSlice.actions;
 export default authSlice.reducer;

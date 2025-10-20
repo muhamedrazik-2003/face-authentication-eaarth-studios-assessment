@@ -5,193 +5,144 @@ const { getFaceDescriptor, faceapi } = require("../config/faceapiConfig");
 
 const isProduction = process.env.NODE_ENV === "production";
 
+// Helper
+const sendError = (res, code, message) => res.status(code).json({ success: false, message });
+
+// Register User
 exports.registerUser = async (req, res) => {
   try {
     const { fullName, email, password } = req.body;
-    const photoIdBuffer = req.files["idImage"][0].buffer;
-    const selfieBuffer = req.files["selfie"][0].buffer;
-    if (!fullName || !email || !password || !photoIdBuffer || !selfieBuffer) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Please Provide all details" });
+    const photoId = req.files?.idImage?.[0];
+    const selfie = req.files?.selfie?.[0];
+
+    if (!fullName || !email || !password || !photoId || !selfie) {
+      return sendError(res, 400, "Please provide all required fields");
     }
 
-    const idDescriptor = Array.from(await getFaceDescriptor(photoIdBuffer));
-    const selfieDescriptor = Array.from(await getFaceDescriptor(selfieBuffer));
+    const existing = await users.findOne({ email });
+    if (existing) return sendError(res, 400, "User already exists");
+
+    const idDescriptor = await getFaceDescriptor(photoId.buffer);
+    const selfieDescriptor = await getFaceDescriptor(selfie.buffer);
+
+    if (!idDescriptor || !selfieDescriptor)
+      return sendError(res, 400, "Face not detected in image(s)");
 
     const distance = faceapi.euclideanDistance(idDescriptor, selfieDescriptor);
-    console.log("Distance between ID image and selfie:", distance);
-    if (distance > 0.6) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Faces do not match" });
-    }
+    if (distance > 0.6) return sendError(res, 400, "Faces do not match");
 
     const hashedPassword = await bcrypt.hash(password, 10);
-    const newUser = new users({
+
+    const newUser = await users.create({
+      fullName,
       email,
       password: hashedPassword,
-      fullName,
-      faceDescriptor: selfieDescriptor,
+      faceDescriptor: Array.from(selfieDescriptor),
       status: "pending",
       role: "user",
     });
-    await newUser.save();
 
     res.status(201).json({
       success: true,
-      message:
-        "user Registration Successfull. please wait until your account has been verifed",
+      message: "User registration successful. Please wait for verification.",
     });
   } catch (err) {
-    console.error(err);
+    console.error("Register Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+// Verify Existing User
 exports.VerfiyExistingUser = async (req, res) => {
   try {
-    console.log(req.body);
     const { email, password } = req.body;
     if (!email || !password)
-      return res
-        .status(400)
-        .json({ success: false, message: "Please Provide Email and Password" });
+      return sendError(res, 400, "Email and password required");
 
-    const existingUser = await users.findOne({ email });
+    const user = await users.findOne({ email });
+    if (!user) return sendError(res, 404, "User not found");
 
-    if (!existingUser)
-      return res.status(401).json({
-        success: false,
-        message: "User with this email doesn't Exist",
-      });
+    if (user.status === "pending")
+      return sendError(res, 403, "Your account is under verification");
+    if (user.status === "rejected")
+      return sendError(res, 403, "Your account has been rejected");
 
-    if (existingUser.status === "pending") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Your Account is Currently under verification. please a wait until your account is activated",
-      });
-    }
-    if (existingUser.status === "rejected") {
-      return res.status(400).json({
-        success: false,
-        message:
-          "Your Account has been Rejected by Admin please contact customer support for more info",
-      });
-    }
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) return sendError(res, 400, "Invalid password");
 
-    console.log("existingUser:", existingUser);
-    console.log("existingUser.password:", existingUser.password);
-
-    const isMatch = await bcrypt.compare(password, existingUser.password);
-    if (!isMatch) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Wrong Password" });
-    }
-
-    res.status(200).json({
-      success: true,
-      message: "user verification success",
-      userEmail: existingUser.email,
-    });
+    res.json({ success: true, message: "User verified", userEmail: user.email });
   } catch (err) {
-    console.error(err);
+    console.error("Verify Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+// Login with Face Authentication
 exports.loginWithFaceAuthentication = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!req.file) {
-      return res.status(400).json({
-        success: false,
-        message: "Selfie file is required",
-      });
-    }
-    const selfieBuffer = req.file.buffer;
+    if (!email || !req.file) return sendError(res, 400, "Email and selfie required");
 
-    console.log("request body and files recieved", req.body, req.files);
+    const user = await users.findOne({ email });
+    if (!user) return sendError(res, 404, "User not found");
 
-    if (!email || !selfieBuffer) {
-      return res.status(400).json({
-        success: false,
-        message: "Please Provide email and image for face authentication",
-      });
-    }
-    const currentUser = await users.findOne({ email });
-    if (!currentUser)
-      return res.status(401).json({
-        success: false,
-        message: "User with this email doesn't Exist",
-      });
-    const existingSelfieDescriptor = currentUser.faceDescriptor;
-
-    const selfieDescriptor = Array.from(await getFaceDescriptor(selfieBuffer));
+    const selfieDescriptor = await getFaceDescriptor(req.file.buffer);
+    if (!selfieDescriptor) return sendError(res, 400, "Face not detected");
 
     const distance = faceapi.euclideanDistance(
-      existingSelfieDescriptor,
+      user.faceDescriptor,
       selfieDescriptor
     );
-    console.log("Distance between stored selfie and login selfie:", distance);
-    if (distance > 0.6) {
-      return res
-        .status(400)
-        .json({ success: false, message: "Faces do not match" });
-    }
 
-    const accessToken = jwt.sign(
-      { userId: currentUser._id, role: currentUser.role },
+    if (distance > 0.6) return sendError(res, 400, "Faces do not match");
+
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
       process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: "1hr" }
+      { expiresIn: "1h" } // correct format
     );
-    res.cookie("accessToken", accessToken, {
+
+    res.cookie("accessToken", token, {
       httpOnly: true,
       secure: isProduction,
       sameSite: isProduction ? "None" : "Lax",
-      path: "/",
       maxAge: 60 * 60 * 1000,
     });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Login Successful",
+      message: "Login successful",
       user: {
-        email: currentUser.email,
-        fullName: currentUser.fullName,
-        role: currentUser.role,
-        status: currentUser.status,
+        email: user.email,
+        fullName: user.fullName,
+        role: user.role,
+        status: user.status,
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Face Auth Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };
 
+// Change Account Status
 exports.changeAccountStatus = async (req, res) => {
   try {
     const { status } = req.body;
     const userId = req.userId;
-    console.log(userId);
 
-    if (!status)
-      return res
-        .status(400)
-        .json({ success: false, message: "Status value not Provided" });
+    if (!status) return sendError(res, 400, "Status not provided");
 
-    const updatedUser = await users.findByIdAndUpdate(userId, { status }, {new: true});
+    const updatedUser = await users.findByIdAndUpdate(
+      userId,
+      { status },
+      { new: true }
+    );
+    if (!updatedUser) return sendError(res, 404, "User not found");
 
-    if(!updatedUser) return res.status(400).json({
-        success: false,
-        message: "User not found",
-      });
-
-    res.status(200).json({
+    res.json({
       success: true,
-      message: "Status Updated Successfully",
+      message: "Status updated",
       user: {
         email: updatedUser.email,
         fullName: updatedUser.fullName,
@@ -200,7 +151,7 @@ exports.changeAccountStatus = async (req, res) => {
       },
     });
   } catch (err) {
-    console.error(err);
+    console.error("Status Update Error:", err);
     res.status(500).json({ success: false, message: err.message });
   }
 };

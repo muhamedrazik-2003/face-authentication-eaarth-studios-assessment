@@ -1,16 +1,18 @@
-import React from 'react'
+import React, { useEffect } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 import Auth from './pages/common/Auth'
 import AdminDashboard from './pages/admin/AdminDashboard'
 import UserDashboard from './pages/user/UserDashboard'
 import NotFound from './pages/common/NotFound'
 import Unauthorized from './pages/common/Unauthorized'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
 import FaceAuth from './pages/common/FaceAuth'
 import { ToastContainer } from 'react-toastify'
 import AccountVerificationPending from './pages/common/AccountVerificationPending'
+import { clearError } from './redux/slices/AuthSlice'
 
 function App() {
+  const dispatch = useDispatch();
   const { isAuthenticated, user, isLoading } = useSelector(
       state => state.authSlice
     )
@@ -29,6 +31,10 @@ function App() {
 
     return children
   }
+
+  useEffect(() => {
+    dispatch(clearError());
+  },[])
 
   return (
     <>

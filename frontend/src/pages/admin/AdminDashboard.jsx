@@ -9,21 +9,21 @@ function AdminDashboard() {
   const dispatch = useDispatch();
   const { user, allUsers } = useSelector((state) => state.authSlice);
   const [activeDropdown, setActiveDropdown] = useState(null);
-  const dropdownRef = useRef(null);
 
   useEffect(() => {
-    if (!allUsers.length) dispatch(getAllUsers());
-  }, [dispatch, allUsers.length]);
+    dispatch(getAllUsers());
+  }, [dispatch]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+      if (!event.target.closest(".dropdown-button") && !event.target.closest(".dropdown-menu")) {
         setActiveDropdown(null);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
 
   const handleChangeUserStatus = async (status, userId) => {
     const response = await dispatch(changeAccountStatus({ status, userId }));
@@ -61,7 +61,7 @@ function AdminDashboard() {
               {allUsers.map((userItem, idx) => (
                 <tr
                   key={userItem._id}
-                  className={`${idx % 2 === 0 ? "bg-gray-50" : "bg-white"} hover:bg-indigo-50 transition`}
+                  className={`even:bg-indigo-50 odd:bg-white hover:bg-indigo-100 transition`}
                 >
                   <td className="px-6 py-3 text-sm text-gray-700">#USR{userItem._id.slice(0, 5)}</td>
                   <td className="px-6 py-3 text-sm text-gray-800 font-medium">{userItem.fullName}</td>
@@ -72,21 +72,22 @@ function AdminDashboard() {
                   <td className="px-6 py-3 text-sm">
                     <span className={getStatusClass(userItem.status)}>{userItem.status}</span>
                   </td>
-                  <td className="pl-6 pr-2 py-3 text-sm relative" ref={dropdownRef}>
+                  <td className="pl-6 pr-2 py-3 text-sm relative">
                     <button
                       onClick={() => setActiveDropdown(prev => (prev === userItem._id ? null : userItem._id))}
                       disabled={userItem.role === "admin"}
+                      className="dropdown-button"
                     >
                       <Edit
                         className={`size-4 ${userItem.role === "admin"
                           ? "text-indigo-400 cursor-not-allowed"
                           : "text-indigo-700 cursor-pointer"
-                        }`}
+                          }`}
                       />
                     </button>
 
                     {activeDropdown === userItem._id && (
-                      <div className="w-48 absolute top-0 right-6 bg-indigo-50 z-10 py-2 px-1 shadow-xl rounded-2xl border border-indigo-200">
+                      <div className="dropdown-menu w-48 absolute top-0 right-6 bg-indigo-50 z-10 py-2 px-1 shadow-xl rounded-2xl border border-indigo-200">
                         <p className="text-indigo-400 border-b border-indigo-200 px-3 pb-2 mb-1">Change User Status</p>
                         {userItem.status !== "verified" && (
                           <p

@@ -76,6 +76,7 @@ const authSlice = createSlice({
       email: "",
       password: "",
       status: "",
+      createdAt: ''
     },
     allUsers: [],
     isLoading: false,

@@ -111,10 +111,12 @@ exports.loginWithFaceAuthentication = async (req, res) => {
     res.json({
       message: "Login successful",
       user: {
+        _id:user._id,
         email: user.email,
         fullName: user.fullName,
         role: user.role,
         status: user.status,
+        createdAt: user.createdAt
       },
     });
   } catch (err) {
@@ -144,6 +146,7 @@ exports.changeAccountStatus = async (req, res) => {
         fullName: updatedUser.fullName,
         role: updatedUser.role,
         status: updatedUser.status,
+        createdAt: updatedUser.createdAt
       },
     });
   } catch (err) {

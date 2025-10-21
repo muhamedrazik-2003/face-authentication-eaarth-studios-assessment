@@ -45,3 +45,20 @@ export const loginSchema = z.object({
     .min(6, "Password must be at least 6 characters")
     .transform((val) => val.trim()),
 });
+
+export function getStatusClass (status) {
+  status = status?.toLowerCase();
+
+  if (status === "admin") {
+    return "px-4 py-1 w-15 rounded-full text-xs font-medium bg-red-100 text-red-600"
+  } else if (status === "user") {
+    return "px-5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600"
+  } else if (status === "pending") {
+    return "px-3 py-1 rounded-full text-xs font-medium bg-amber-600 text-black"
+  } else if (status === "verified") {
+    return "px-3 py-1 rounded-full text-xs font-medium bg-green-600 text-white"
+  } else if (status === "rejected") {
+    return "px-3 py-1 rounded-full text-xs font-medium bg-red-600 text-white"
+  }
+  
+}

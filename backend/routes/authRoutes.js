@@ -16,5 +16,6 @@ router.post(
 
 router.post("/login-face-auth",upload.single('selfie'), authController.loginWithFaceAuthentication);
 router.patch("/user/status",jwtMiddleware, authController.changeAccountStatus);
+router.get("/users/all",jwtMiddleware, authController.getAllUsers);
 
 module.exports = router;

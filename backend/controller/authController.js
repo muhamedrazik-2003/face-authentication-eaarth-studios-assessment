@@ -55,7 +55,7 @@ exports.registerUser = async (req, res) => {
 exports.VerfiyExistingUser = async (req, res) => {
   try {
     const { email, password } = req.body;
-    console.log("req body recieved", req.body)
+    console.log("req body recieved", req.body);
     if (!email || !password)
       return sendError(res, 400, "Email and password required");
 
@@ -152,5 +152,25 @@ exports.changeAccountStatus = async (req, res) => {
   } catch (err) {
     console.error("Status Update Error:", err);
     res.status(500).json({ message: err.message });
+  }
+};
+
+exports.getAllUsers = async (req, res) => {
+  try {
+    const allUsers = await users.find({}, "email fullName role status createdAt");
+
+    if (!allUsers || allUsers.length === 0) {
+      return res.status(404).json({message: "No users found."});
+    }
+
+    res.status(200).json({
+      message: "All users retrieved successfully.",
+      allUsers,
+    });
+  } catch (err) {
+    console.error("❌ Error fetching users:", err);
+    res.status(500).json({
+      message: "Internal Server Error. Please try again later.",
+    });
   }
 };

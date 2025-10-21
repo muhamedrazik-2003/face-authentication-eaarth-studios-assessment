@@ -62,6 +62,7 @@ const authSlice = createSlice({
       password: "",
       status: "",
     },
+    allUsers: [],
     isLoading: false,
     error: null,
     isRegistering: false,

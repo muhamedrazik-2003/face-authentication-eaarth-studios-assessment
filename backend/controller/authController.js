@@ -128,9 +128,7 @@ exports.loginWithFaceAuthentication = async (req, res) => {
 // Change Account Status
 exports.changeAccountStatus = async (req, res) => {
   try {
-    const { status } = req.body;
-    const userId = req.userId;
-
+    const { status, userId } = req.body;
     if (!status) return sendError(res, 400, "Status not provided");
 
     const updatedUser = await users.findByIdAndUpdate(
@@ -143,6 +141,7 @@ exports.changeAccountStatus = async (req, res) => {
     res.json({
       message: "Status updated",
       user: {
+        _id:updatedUser._id,
         email: updatedUser.email,
         fullName: updatedUser.fullName,
         role: updatedUser.role,
@@ -157,10 +156,13 @@ exports.changeAccountStatus = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const allUsers = await users.find({}, "email fullName role status createdAt _id");
+    const allUsers = await users.find(
+      {},
+      "email fullName role status createdAt _id"
+    );
 
     if (!allUsers || allUsers.length === 0) {
-      return res.status(404).json({message: "No users found."});
+      return res.status(404).json({ message: "No users found." });
     }
 
     res.status(200).json({

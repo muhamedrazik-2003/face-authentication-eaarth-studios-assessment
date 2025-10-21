@@ -58,10 +58,12 @@ export const getAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const { data } = await axiosConfig.get(`/user/all`);
-      console.log("all Users", data)
+      console.log("all Users", data);
       return data;
     } catch (error) {
-      return rejectWithValue(handleError(error, "Failed to Retrieve all users"));
+      return rejectWithValue(
+        handleError(error, "Failed to Retrieve all users")
+      );
     }
   }
 );
@@ -161,9 +163,12 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = null;
 
-        if (action.payload?.user) {
-          state.user.status = action.payload.user.status;
-        }
+        state.allUsers = state.allUsers.map((user) => {
+          if (user._id === action.payload.user._id) {
+            return { ...user, status: action.payload.user.status };
+          }
+          return user;
+        });
 
         state.message =
           action.payload?.message || "Status updated successfully";
@@ -178,7 +183,8 @@ const authSlice = createSlice({
         state.isLoading = false;
         state.error = null;
         state.allUsers = action.payload?.allUsers;
-        state.message = action.payload?.message || "All Users retrieved successfully";
+        state.message =
+          action.payload?.message || "All Users retrieved successfully";
       })
       .addCase(getAllUsers.rejected, (state, action) =>
         setRejected(state, action, "Failed to retrieve all users")

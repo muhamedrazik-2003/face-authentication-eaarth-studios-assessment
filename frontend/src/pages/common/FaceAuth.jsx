@@ -116,7 +116,7 @@ function FaceAuth() {
       const response = await dispatch(registerUser(userData))
       if (registerUser.fulfilled.match(response)) {
         toast.success("Your Account Has been Registered Successfully")
-        navigate('/')
+        navigate('/account-verification-pending')
         return
       } else if (registerUser.rejected.match(response)) {
         toast.error(response.payload.message)

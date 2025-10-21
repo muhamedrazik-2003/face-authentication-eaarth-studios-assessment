@@ -62,8 +62,6 @@ exports.VerfiyExistingUser = async (req, res) => {
     const user = await users.findOne({ email });
     if (!user) return sendError(res, 404, "User not found");
 
-    if (user.status === "pending")
-      return sendError(res, 403, "Your account is under verification");
     if (user.status === "rejected")
       return sendError(res, 403, "Your account has been rejected");
 

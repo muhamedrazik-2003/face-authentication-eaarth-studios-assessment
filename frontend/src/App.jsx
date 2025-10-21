@@ -8,6 +8,7 @@ import Unauthorized from './pages/common/Unauthorized'
 import { useSelector } from 'react-redux'
 import FaceAuth from './pages/common/FaceAuth'
 import { ToastContainer } from 'react-toastify'
+import AccountVerificationPending from './pages/common/AccountVerificationPending'
 
 function App() {
   const { isAuthenticated, user, isLoading } = useSelector(
@@ -22,6 +23,9 @@ function App() {
     if (role && user?.role !== role && user?.role !== "admin") {
       return <Navigate to="/unauthorized" replace />
     }
+    if(user?.status === "pending") {
+      return <Navigate to="/account-verification-pending" replace />
+    }
 
     return children
   }
@@ -34,6 +38,7 @@ function App() {
 
       <Route path='*' element={<NotFound />} />
       <Route path='/unauthorized' element={<Unauthorized />} />
+      <Route path='/account-verification-pending' element={<AccountVerificationPending />} />
 
       <Route path='/admin' element={<PrivateRoute><AdminDashboard /></PrivateRoute>} />
 

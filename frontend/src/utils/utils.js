@@ -54,7 +54,7 @@ export function getStatusClass (status) {
   } else if (status === "user") {
     return "px-5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-600"
   } else if (status === "pending") {
-    return "px-3 py-1 rounded-full text-xs font-medium bg-amber-600 text-black"
+    return "px-3 py-1 rounded-full text-xs font-medium bg-amber-600 text-white"
   } else if (status === "verified") {
     return "px-3 py-1 rounded-full text-xs font-medium bg-green-600 text-white"
   } else if (status === "rejected") {

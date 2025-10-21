@@ -4,6 +4,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { useNavigate } from 'react-router-dom'
 import { clearError, setIsRegistering, updateUser, verifyUser } from '../../redux/slices/AuthSlice';
 import { registerSchema, loginSchema } from '../../utils/utils'
+import { toast } from 'react-toastify';
 function Auth() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
@@ -48,6 +49,7 @@ function Auth() {
     } else {
       const response = await dispatch(verifyUser(userData))
       if (verifyUser.fulfilled.match(response)) {
+        toast.success("user Validated")
         navigate('/auth/verify-face')
       }
     }

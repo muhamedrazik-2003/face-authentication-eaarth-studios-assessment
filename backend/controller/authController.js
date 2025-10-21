@@ -157,7 +157,7 @@ exports.changeAccountStatus = async (req, res) => {
 
 exports.getAllUsers = async (req, res) => {
   try {
-    const allUsers = await users.find({}, "email fullName role status createdAt");
+    const allUsers = await users.find({}, "email fullName role status createdAt _id");
 
     if (!allUsers || allUsers.length === 0) {
       return res.status(404).json({message: "No users found."});

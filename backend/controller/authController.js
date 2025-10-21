@@ -81,7 +81,8 @@ exports.VerfiyExistingUser = async (req, res) => {
 exports.loginWithFaceAuthentication = async (req, res) => {
   try {
     const { email } = req.body;
-    if (!email || !req.file) return sendError(res, 400, "Email and selfie required");
+    if (!req.file) return sendError(res, 400, "selfie required");
+    if (!email) return sendError(res, 400, "Email not provided");
 
     const user = await users.findOne({ email });
     if (!user) return sendError(res, 404, "User not found");

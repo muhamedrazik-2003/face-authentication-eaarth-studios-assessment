@@ -24,8 +24,8 @@ function FaceAuth() {
 
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      e.preventDefault(); // standard
-      e.returnValue = ""; // Chrome requires this
+      e.preventDefault();
+      e.returnValue = "";
     };
 
     window.addEventListener("beforeunload", handleBeforeUnload);
@@ -35,7 +35,23 @@ function FaceAuth() {
     };
   }, []);
 
-  const { isLoading, user, isRegistering } = useSelector((state) => state.authSlice)
+  const { isLoading, user, isRegistering, isUserVerified } = useSelector((state) => state.authSlice)
+
+  useEffect(() => {
+    if (!user) return;
+
+    if (isRegistering) {
+      if (!user.fullName || !user.email || !user.password) {
+        toast.error("Something went wrong please restart Registration process");
+        navigate('/auth');
+      }
+    } else {
+      if (!isUserVerified && (!user.email || !user.password)) {
+        toast.error("Something went wrong please restart Login process");
+        navigate('/auth');
+      }
+    }
+  }, [user, isRegistering, isUserVerified, navigate]);
 
   const handlePhotoIdAdd = (e) => {
     const addedFile = e.target.files[0]
@@ -72,7 +88,8 @@ function FaceAuth() {
   const handleSubmit = async () => {
     const { fullName, email, password } = user
     const { photoId, selfie } = selectedImages
-    console.log(selectedImages)
+    console.log("user", user)
+    console.log("selectedImages", selectedImages)
     if (isRegistering) {
       if (
         !fullName ||
@@ -139,7 +156,7 @@ function FaceAuth() {
 
         {isRegistering &&
           <>
-            < div className="space-y-3 my-10">
+            < div className="space-y-3 my-10 mb-20">
               <p className="text-gray-600 font-medium">Photo ID (Passport or Government ID)</p>
               <label htmlFor="photoId" className="block cursor-pointer aspect-video rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all">
                 <input
@@ -169,13 +186,19 @@ function FaceAuth() {
           {/* Selfie / Webcam */}
           {optionSelected && isSelfieOption ? (
             <div className="space-y-3">
-              <p className="text-gray-600 font-medium">Take Selfie</p>
+              <div className='flex justify-between'>
+                <p className="text-gray-600 font-medium">Take Selfie</p>
+                <button onClick={() => setOptionSelected(false)} className='bg-indigo-500 px-3 py-0.5 rounded-3xl text-white'>Choose again</button>
+              </div>
               <WebcamPreview onCapture={(file) => setSelectedImages(prev => ({ ...prev, selfie: file }))} />
             </div>
 
           ) : optionSelected && !isSelfieOption ? (
             <div className="space-y-3">
-              <p className="text-gray-600 font-medium">Choose A Selfie or Photo</p>
+              <div className='flex justify-between'>
+                <p className="text-gray-600 font-medium">Choose A Selfie or Photo</p>
+                <button onClick={() => setOptionSelected(false)} className='bg-indigo-500 px-3 py-0.5 rounded-3xl text-white'>Choose again</button>
+              </div>
               <label htmlFor="selfie" className="block cursor-pointer aspect-video rounded-2xl overflow-hidden shadow-md hover:shadow-lg transition-all">
                 <input
                   accept="image/*"

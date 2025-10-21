@@ -15,13 +15,13 @@ function App() {
     )
 
   function PrivateRoute({ children, role }) {
-    if (!isAuthenticated) {
-      return <Navigate to="/auth" replace />
-    }
+    // if (!isAuthenticated) {
+    //   return <Navigate to="/auth" replace />
+    // }
 
-    if (role && user?.role !== role && user?.role !== "admin") {
-      return <Navigate to="/unauthorized" replace />
-    }
+    // if (role && user?.role !== role && user?.role !== "admin") {
+    //   return <Navigate to="/unauthorized" replace />
+    // }
 
     return children
   }
